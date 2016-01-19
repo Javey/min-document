@@ -1,6 +1,7 @@
 module.exports = serializeNode
 
 var voidElements = /area|base|br|col|embed|hr|img|input|keygen|link|menuitem|meta|param|source|track|wbr/i;
+var hasOwn = Object.prototype.hasOwnProperty;
 
 function serializeNode(node) {
     switch (node.nodeType) {
@@ -51,7 +52,7 @@ function isProperty(elem, key) {
     }
 
     return elem.hasOwnProperty(key) &&
-        (type === "string" || type === "boolean" || type === "number") &&
+        (type === "string" || (type === "boolean" && elem[key]) || type === "number") &&
         key !== "nodeName" && key !== "className" && key !== "tagName" &&
         key !== "textContent" && key !== "innerText" && key !== "namespaceURI" &&  key !== "innerHTML"
 }
@@ -89,7 +90,7 @@ function stringify(list) {
             value = stylify(value)
         }
 
-        attributes.push(name + "=" + "\"" + escapeAttributeValue(value) + "\"")
+        attributes.push(name + "=" + "\"" + escapeAttributeValue(String(value)) + "\"")
     })
 
     return attributes.length ? " " + attributes.join(" ") : ""
@@ -98,7 +99,7 @@ function stringify(list) {
 function properties(elem) {
     var props = []
     for (var key in elem) {
-        if (isProperty(elem, key)) {
+        if (hasOwn.call(elem, key) && isProperty(elem, key)) {
             props.push({ name: key, value: elem[key] })
         }
     }
