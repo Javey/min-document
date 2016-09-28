@@ -46,7 +46,7 @@ function serializeElement(elem) {
 function isProperty(elem, key) {
     var type = typeof elem[key]
 
-    if (key === "style" && Object.keys(elem.style).length > 0) {
+    if (key === "style" && (type === "string" && elem[key] || Object.keys(elem.style).length > 0)) {
       return true
     }
 
