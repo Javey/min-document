@@ -1,7 +1,6 @@
 module.exports = serializeNode
 
-var voidElements = /area|base|br|col|embed|hr|img|input|keygen|link|menuitem|meta|param|source|track|wbr/i;
-var hasOwn = Object.prototype.hasOwnProperty;
+var voidElements = ["area","base","br","col","embed","hr","img","input","keygen","link","menuitem","meta","param","source","track","wbr"];
 
 function serializeNode(node) {
     switch (node.nodeType) {
@@ -25,7 +24,7 @@ function serializeElement(elem) {
 
     strings.push("<" + tagname + properties(elem) + datasetify(elem))
 
-    if (voidElements.test(tagname)) {
+    if (voidElements.indexOf(tagname) > -1) {
         strings.push(" />")
     } else {
         strings.push(">")
@@ -52,12 +51,13 @@ function isProperty(elem, key) {
     }
 
     return elem.hasOwnProperty(key) &&
-        (type === "string" || (type === "boolean" && elem[key]) || type === "number") &&
+        (type === "string" || type === "boolean" || type === "number") &&
         key !== "nodeName" && key !== "className" && key !== "tagName" &&
         key !== "textContent" && key !== "innerText" && key !== "namespaceURI" &&  key !== "innerHTML"
 }
 
 function stylify(styles) {
+    if (typeof styles === 'string') return styles
     var attr = ""
     Object.keys(styles).forEach(function (key) {
         var value = styles[key]
@@ -90,7 +90,7 @@ function stringify(list) {
             value = stylify(value)
         }
 
-        attributes.push(name + "=" + "\"" + escapeAttributeValue(String(value)) + "\"")
+        attributes.push(name + "=" + "\"" + escapeAttributeValue(value) + "\"")
     })
 
     return attributes.length ? " " + attributes.join(" ") : ""
@@ -99,7 +99,7 @@ function stringify(list) {
 function properties(elem) {
     var props = []
     for (var key in elem) {
-        if (hasOwn.call(elem, key) && isProperty(elem, key)) {
+        if (isProperty(elem, key)) {
             props.push({ name: key, value: elem[key] })
         }
     }
@@ -119,7 +119,15 @@ function properties(elem) {
     return props.length ? stringify(props) : ""
 }
 
-function escapeText(str) {
+function escapeText(s) {
+    var str = '';
+
+    if (typeof(s) === 'string') { 
+        str = s; 
+    } else if (s) {
+        str = s.toString();
+    }
+
     return str
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
